@@ -14,37 +14,46 @@ const Cart = () => {
     }, []);
 
     const handleRemoveFromCart = async (item) => {
+        // Suppression de l'article du panier
         await axios.delete(`http://localhost:3001/cart/${item.id}`);
-        fetchCartItems();
+
+        // Mise à jour du stock dans `db.json`
+        const { data: product } = await axios.get(`http://localhost:3001/products/${item.id}`);
+        const updatedProduct = {
+            ...product,
+            stock: product.stock + item.quantity, // Ajouter uniquement la quantité retirée
+        };
+
+        await axios.put(`http://localhost:3001/products/${item.id}`, updatedProduct);
+
+        fetchCartItems(); // Recharger les articles du panier
     };
 
-    // Calculer le total du panier
     const calculateTotal = () => {
         return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
     };
 
-    // Gérer le paiement (simulation)
     const handlePayment = async () => {
         const totalAmount = calculateTotal();
 
         if (totalAmount <= 0) {
-            alert("Your cart is empty. Please add items to the cart.");
+            alert("Votre panier est vide. Veuillez ajouter des articles.");
             return;
         }
 
-        // Simuler le paiement (ici vous pouvez intégrer un vrai service de paiement)
-        alert(`Payment successful! Total amount: $${totalAmount}`);
+        alert(`Paiement réussi ! Montant total : $${totalAmount}`);
 
-        // Après paiement, vider le panier
+        // Vider le panier après paiement
         for (let item of cartItems) {
             await axios.delete(`http://localhost:3001/cart/${item.id}`);
         }
-        fetchCartItems(); // Réinitialiser l'état du panier après le paiement
+
+        fetchCartItems();
     };
 
     return (
         <div>
-            <h2 className="text-2xl font-semibold mt-6 mb-4">Cart</h2>
+            <h2 className="text-2xl font-semibold mt-6 mb-4">Panier</h2>
             {cartItems.length === 0 ? (
                 <p>Le panier est vide.</p>
             ) : (
@@ -72,12 +81,12 @@ const Cart = () => {
                 </ul>
             )}
             <div className="mt-4">
-                <p className="font-semibold">Total: ${calculateTotal()}</p>
+                <p className="font-semibold">Total : ${calculateTotal()}</p>
                 <button
                     className="btn btn-primary mt-4"
                     onClick={handlePayment}
                 >
-                    Proceder au paiement
+                    Procéder au paiement
                 </button>
             </div>
         </div>

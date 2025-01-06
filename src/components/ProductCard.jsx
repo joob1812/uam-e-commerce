@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 const ProductCard = ({ product, onAddToCart, onDelete }) => {
+    const [stock, setStock] = useState(product.stock);
     const [showDescription, setShowDescription] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
 
@@ -10,6 +12,22 @@ const ProductCard = ({ product, onAddToCart, onDelete }) => {
 
     const handleLikeToggle = () => {
         setIsLiked(!isLiked);
+    };
+
+    const handleAddToCart = async () => {
+        if (stock > 0) {
+            // Ajouter au panier
+            await onAddToCart(product);
+
+            // Mettre à jour le stock dans db.json
+            try {
+                const updatedProduct = { ...product, stock: stock - 1 };
+                await axios.put(`http://localhost:3001/products/${product.id}`, updatedProduct);
+                setStock(stock - 1); // Mettre à jour l'état local du stock
+            } catch (error) {
+                console.error("Erreur lors de la mise à jour du stock :", error);
+            }
+        }
     };
 
     return (
@@ -32,25 +50,28 @@ const ProductCard = ({ product, onAddToCart, onDelete }) => {
                 </div>
 
                 <h2 className="card-title">{product.title}</h2>
-                <p className="text-lg font-semibold text-gray-700">${product.price}</p> {/* Afficher le prix */}
+                <p className="text-lg font-semibold">Prix : ${product.price}</p>
                 <button
                     className="btn btn-sm btn-outline mb-2"
                     onClick={toggleDescription}
                 >
-                    {showDescription ? "Hide" : "Show"} Description
+                    {showDescription ? "Cacher" : "Afficher"} la description
                 </button>
                 {showDescription && <p>{product.description}</p>}
-                <p className="text-sm text-gray-600">Available: {product.stock} items</p>
-                <div className="card-actions justify-between"> {/* Réarranger les boutons */}
+                <p className="text-sm text-gray-600">
+                    Stock disponible : {stock > 0 ? stock : "Rupture de stock"}
+                </p>
+                <div className="card-actions justify-end">
                     <button
                         className="btn btn-secondary"
-                        onClick={() => onAddToCart(product)}
+                        onClick={handleAddToCart}
+                        disabled={stock === 0} // Désactiver si le stock est à zéro
                     >
                         Ajouter au panier
                     </button>
                     <button
                         className="btn btn-error"
-                        onClick={() => onDelete(product.id)} // Appeler onDelete pour supprimer
+                        onClick={() => onDelete(product.id)}
                     >
                         Supprimer
                     </button>
