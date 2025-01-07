@@ -12,7 +12,7 @@ export default function Layout() {
         <>
             <div className="navbar bg-violet-500 shadow-lg shadow-violet-200 rounded ">
                 <div className="flex-1">
-                    <a className="btn btn-ghost text-xl text-white ">UAM E-Commerce</a>
+                    <Link to="/" className="btn btn-ghost text-xl text-white ">UAM E-Commerce</Link>
                 </div>
                 <input
                     type="text"
